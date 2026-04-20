@@ -10,80 +10,78 @@
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-mark">H</div>
     <div class="logo-text">Hunt<span>AI</span></div>
     <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</button>
   </div>
-
   <nav class="sidebar-nav">
     <button class="nav-item active" data-panel="feed" onclick="showPanel('feed',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Job Feed
-      <span class="nav-badge" id="badge-feed">0</span>
+      Job Feed <span class="nav-badge" id="badge-feed">0</span>
     </button>
     <button class="nav-item" data-panel="tracker" onclick="showPanel('tracker',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-      Tracker
-      <span class="nav-badge accent" id="badge-track">0</span>
+      Tracker <span class="nav-badge accent" id="badge-track">0</span>
     </button>
     <button class="nav-item" data-panel="stats" onclick="showPanel('stats',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Analytics
     </button>
     <button class="nav-item" data-panel="settings" onclick="showPanel('settings',this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M21 12h-2M5 12H3M12 21v-2M12 5V3"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M21 12h-2M5 12H3M12 21v-2M12 5V3"/></svg>
       Settings
     </button>
   </nav>
-
   <div class="sidebar-footer">
     <div class="sidebar-last-fetch" id="feed-updated-sidebar">Last fetch: —</div>
     <button class="btn-refresh-now" onclick="fetchJobs(true)">↻ Refresh now</button>
-    <div class="gmail-status" id="gmail-status" onclick="showPanel('settings')">
+    <div class="gmail-status" onclick="showPanel('settings')">
       <div class="status-dot" id="gmail-dot"></div>
       <span id="gmail-label">Connect Gmail</span>
     </div>
   </div>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
 
-  <!-- FEED PANEL -->
+  <!-- FEED -->
   <div class="panel active" id="panel-feed">
     <div class="panel-header">
       <div>
         <h1 class="panel-title">Job Feed</h1>
-        <p class="panel-sub">Live listings from Google Jobs, LinkedIn, Indeed + company sites — <span id="feed-updated">loading...</span></p>
+        <p class="panel-sub">Live from LinkedIn, Indeed, Greenhouse + company sites — <span id="feed-updated">loading...</span></p>
       </div>
-      <button class="btn-primary" onclick="fetchJobs(true)" style="white-space:nowrap">↻ Fetch now</button>
+      <button class="btn-primary" onclick="fetchJobs(true)">↻ Fetch now</button>
     </div>
 
-    <div class="filter-row" style="margin-bottom:12px">
+    <div class="filter-row" style="margin-bottom:10px;flex-wrap:wrap">
       <input type="text" class="search-input" id="search-q" placeholder="Search title, company, skill..." oninput="filterFeed()">
       <select class="filter-sel" id="f-role" onchange="filterFeed()">
         <option value="">All roles</option>
-        <option value="Data Analyst">Data Analyst</option>
-        <option value="Business Analyst">Business Analyst</option>
-        <option value="BI Analyst">BI Analyst</option>
-        <option value="Analytics Engineer">Analytics Engineer</option>
-        <option value="Data Engineer">Data Engineer</option>
+        <option>Data Analyst</option><option>Business Analyst</option><option>BI Analyst</option>
+        <option>Analytics Engineer</option><option>Data Engineer</option>
       </select>
       <select class="filter-sel" id="f-loc" onchange="filterFeed()">
         <option value="">All locations</option>
         <option value="Remote">Remote</option>
         <option value="United States">United States</option>
         <option value="India">India</option>
+        <option value="UK">United Kingdom</option>
+      </select>
+      <select class="filter-sel" id="f-date" onchange="filterFeed()">
+        <option value="any">Any time</option>
+        <option value="2h">Last 2 hours</option>
+        <option value="24h">Last 24 hours</option>
+        <option value="2d">Last 2 days</option>
+        <option value="7d">Last 7 days</option>
       </select>
       <select class="filter-sel" id="f-sponsor" onchange="filterFeed()">
         <option value="all">All (sponsorship)</option>
         <option value="yes">✦ Sponsors visas only</option>
         <option value="hide_no">Hide "no sponsorship"</option>
         <option value="unknown">Unknown only</option>
-        <option value="no">No sponsorship only</option>
       </select>
       <select class="filter-sel" id="f-sort" onchange="filterFeed()">
         <option value="recent">Newest first</option>
@@ -95,39 +93,34 @@
     <div class="source-pills">
       <span class="src-pill on" onclick="toggleSrc(this,'LinkedIn')">LinkedIn</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Indeed')">Indeed</span>
-      <span class="src-pill on" onclick="toggleSrc(this,'Glassdoor')">Glassdoor</span>
-      <span class="src-pill on" onclick="toggleSrc(this,'Wellfound')">Wellfound</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Greenhouse')">Greenhouse</span>
-      <span class="src-pill on" onclick="toggleSrc(this,'Company Site')">Company Sites</span>
-      <span class="src-pill on" onclick="toggleSrc(this,'Google Jobs')">Google Jobs</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Lever')">Lever</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Workday')">Workday</span>
+      <span class="src-pill on" onclick="toggleSrc(this,'Company Site')">Company Sites</span>
+      <span class="src-pill on" onclick="toggleSrc(this,'Glassdoor')">Glassdoor</span>
+      <span class="src-pill on" onclick="toggleSrc(this,'Wellfound')">Wellfound</span>
     </div>
 
     <div id="feed-loading" class="loading-state" style="display:none">
       <div class="loader-ring"></div>
-      <div class="loading-text">Fetching across the web<span class="dots"></span></div>
-      <div class="loading-sub" id="loading-sub">Starting Google Jobs + LinkedIn scrapers</div>
+      <div class="loading-text">Fetching live jobs<span class="dots"></span></div>
+      <div class="loading-sub" id="loading-sub">Starting scrapers</div>
     </div>
-
     <div class="job-grid" id="job-grid"></div>
     <div class="empty-state" id="feed-empty" style="display:none">
       <div class="empty-icon">◎</div>
       <div class="empty-title">No jobs match your filters</div>
-      <div class="empty-sub">Try adjusting search or sponsorship filter</div>
+      <div class="empty-sub">Try adjusting the date or sponsorship filter</div>
     </div>
   </div>
 
-  <!-- TRACKER PANEL -->
+  <!-- TRACKER -->
   <div class="panel" id="panel-tracker">
     <div class="panel-header">
-      <div>
-        <h1 class="panel-title">Application Tracker</h1>
-        <p class="panel-sub">Click any card to update status, add notes, or delete</p>
-      </div>
+      <div><h1 class="panel-title">Tracker</h1><p class="panel-sub">Click any card to update status, add notes, or delete</p></div>
       <button class="btn-primary" onclick="showLogModal()">+ Log manually</button>
     </div>
-    <div class="kanban" id="kanban">
+    <div class="kanban">
       <div class="kanban-col"><div class="kanban-header"><span class="kanban-title">Saved</span><span class="kanban-count" id="kc-saved">0</span></div><div class="kanban-cards" id="k-saved"></div></div>
       <div class="kanban-col"><div class="kanban-header"><span class="kanban-title" style="color:var(--blue)">Applied</span><span class="kanban-count blue" id="kc-applied">0</span></div><div class="kanban-cards" id="k-applied"></div></div>
       <div class="kanban-col"><div class="kanban-header"><span class="kanban-title" style="color:var(--amber)">Interview</span><span class="kanban-count amber" id="kc-interview">0</span></div><div class="kanban-cards" id="k-interview"></div></div>
@@ -136,46 +129,43 @@
     </div>
   </div>
 
-  <!-- STATS PANEL -->
+  <!-- ANALYTICS -->
   <div class="panel" id="panel-stats">
     <div class="panel-header"><div><h1 class="panel-title">Analytics</h1><p class="panel-sub">Your job search performance</p></div></div>
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">Total Applied</div><div class="stat-num" id="st-total">0</div><div class="stat-delta" id="st-week">this week: 0</div></div>
       <div class="stat-card"><div class="stat-label">Response Rate</div><div class="stat-num blue" id="st-rate">0%</div><div class="stat-delta" id="st-rate-d">interviews + offers</div></div>
       <div class="stat-card"><div class="stat-label">Interviews</div><div class="stat-num amber" id="st-inter">0</div><div class="stat-delta">scheduled/completed</div></div>
-      <div class="stat-card"><div class="stat-label">Offers</div><div class="stat-num green" id="st-offer">0</div><div class="stat-delta">congratulations!</div></div>
+      <div class="stat-card"><div class="stat-label">Offers</div><div class="stat-num green" id="st-offer">0</div><div class="stat-delta">you got this!</div></div>
     </div>
     <div class="stat-card" style="margin-bottom:16px;padding:14px 20px">
       <div class="stat-label" style="margin-bottom:8px">Sponsorship breakdown</div>
-      <div id="st-sponsor" style="font-size:13px"></div>
+      <div id="st-sponsor" style="font-size:13px;display:flex;gap:16px;flex-wrap:wrap"></div>
     </div>
     <div class="charts-row">
       <div class="chart-card"><div class="chart-title">This week</div><div class="bar-wrap" id="chart-week"></div></div>
-      <div class="chart-card"><div class="chart-title">By role</div><div class="donut-wrap" id="chart-role"><svg id="donut-svg" viewBox="0 0 120 120" width="120" height="120"></svg><div class="donut-legend" id="donut-legend"></div></div></div>
+      <div class="chart-card"><div class="chart-title">By role</div><div class="donut-wrap"><svg id="donut-svg" viewBox="0 0 120 120" width="120" height="120"></svg><div class="donut-legend" id="donut-legend"></div></div></div>
       <div class="chart-card"><div class="chart-title">Pipeline</div><div class="funnel-wrap" id="chart-funnel"></div></div>
     </div>
     <div class="chart-card" style="margin-top:16px"><div class="chart-title">Hour of day applied</div><div class="bar-wrap hour-wrap" id="chart-hour"></div></div>
   </div>
 
-  <!-- SETTINGS PANEL -->
+  <!-- SETTINGS -->
   <div class="panel" id="panel-settings">
-    <div class="panel-header"><div><h1 class="panel-title">Settings</h1><p class="panel-sub">Profile, API keys, roles, locations</p></div></div>
+    <div class="panel-header"><div><h1 class="panel-title">Settings</h1><p class="panel-sub">Profile, API keys, reminders, data backup</p></div></div>
     <div class="settings-grid">
 
       <!-- PROFILE -->
       <div class="settings-card">
-        <div class="settings-section-title">Your Profile — for match scoring</div>
+        <div class="settings-section-title">Your Profile</div>
         <label class="settings-label">Years of experience</label>
         <input type="number" class="settings-input" id="p-exp" placeholder="e.g. 3" min="0" max="30">
-        <label class="settings-label">Your skills (used to score job matches)</label>
-        <div class="role-tags" id="profile-skill-tags" style="margin-bottom:8px"></div>
+        <label class="settings-label">Your skills (for match scoring)</label>
+        <div class="role-tags" id="profile-skill-tags" style="margin-bottom:8px;min-height:24px"></div>
         <div style="display:flex;gap:8px">
-          <input type="text" class="settings-input" id="p-skill-input" placeholder="e.g. SQL, Python, Tableau..." style="flex:1">
+          <input type="text" class="settings-input" id="p-skill-input" placeholder="e.g. SQL, Python..." style="flex:1">
           <button class="btn-outline" onclick="addProfileSkill()">Add</button>
         </div>
-        <label class="settings-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:12px">
-          <input type="checkbox" id="p-sponsorship"> I need visa sponsorship
-        </label>
         <button class="btn-primary" onclick="saveProfile()" style="margin-top:14px;width:100%">Save Profile</button>
       </div>
 
@@ -183,54 +173,96 @@
       <div class="settings-card">
         <div class="settings-section-title">Apify — Job Fetching</div>
         <div style="font-size:12px;color:var(--green);background:var(--green-dim);border-radius:6px;padding:8px 12px;margin-bottom:12px;line-height:1.6">
-          🔒 Key stored in your browser only — never in code or GitHub
+          🔒 Stored in your browser only — never in GitHub code
         </div>
-        <label class="settings-label">API Token</label>
+        <label class="settings-label">Apify API Token</label>
         <input type="password" class="settings-input" id="apify-key-input" placeholder="apify_api_...">
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="btn-primary" onclick="saveApifySettings()" style="flex:1">Save & Fetch Jobs</button>
           <button class="btn-outline" onclick="revokeApifyKey()">Revoke</button>
         </div>
         <div class="settings-feedback" id="apify-feedback"></div>
-        <div style="margin-top:14px;font-size:12px;color:var(--muted)">Fetches from: Google Jobs (covers 100s of company career sites, Workday, Greenhouse, Lever, Ashby) + LinkedIn fallback</div>
-        <div style="margin-top:8px;font-size:12px;color:var(--muted)">Fetches so far this session: <strong id="fetch-count">0</strong></div>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7">
+          Uses <strong>curious_coder/linkedin-jobs-scraper</strong> (the actor already in your Apify account ✓).<br>
+          Fetches so far: <strong id="fetch-count">0</strong>
+        </div>
       </div>
 
       <!-- ROLES -->
       <div class="settings-card">
         <div class="settings-section-title">Target Roles</div>
-        <div class="role-tags" id="role-tags"></div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <input type="text" class="settings-input" id="new-role" placeholder="Add a role..." style="flex:1">
-          <button class="btn-outline" onclick="addRole()">Add</button>
+        <div class="role-tags" id="role-tags" style="margin-bottom:12px;min-height:24px"></div>
+        <div style="position:relative">
+          <input type="text" class="settings-input" id="new-role" placeholder="Type to search roles...">
         </div>
+        <button class="btn-outline" onclick="addRole()" style="margin-top:8px;width:100%">+ Add role</button>
       </div>
 
       <!-- LOCATIONS -->
       <div class="settings-card">
         <div class="settings-section-title">Target Locations</div>
-        <div class="role-tags" id="loc-tags"></div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <input type="text" class="settings-input" id="new-loc" placeholder="Add a location..." style="flex:1">
-          <button class="btn-outline" onclick="addLoc()">Add</button>
+        <div class="role-tags" id="loc-tags" style="margin-bottom:12px;min-height:24px"></div>
+        <div style="position:relative">
+          <input type="text" class="settings-input" id="new-loc" placeholder="Type to search locations...">
+        </div>
+        <button class="btn-outline" onclick="addLoc()" style="margin-top:8px;width:100%">+ Add location</button>
+      </div>
+
+      <!-- NTFY REMINDERS -->
+      <div class="settings-card">
+        <div class="settings-section-title">Phone Reminders — ntfy.sh</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+          Get a phone notification 24h after saving a job if you haven't applied yet.<br><br>
+          <strong style="color:var(--text)">Setup (2 min, free):</strong><br>
+          1. Install <a href="https://ntfy.sh" target="_blank" style="color:var(--blue)">ntfy app</a> on your phone<br>
+          2. Subscribe to any topic name you create (e.g. <code style="color:var(--accent)">sarang-huntai-2024</code>)<br>
+          3. Paste that topic name below
+        </p>
+        <label class="settings-label">Your ntfy topic name</label>
+        <input type="text" class="settings-input" id="ntfy-topic" placeholder="e.g. sarang-huntai-2024">
+        <button class="btn-primary" onclick="testNtfy()" style="margin-top:10px;width:100%">Save & Send Test Notification</button>
+      </div>
+
+      <!-- DATA BACKUP -->
+      <div class="settings-card">
+        <div class="settings-section-title">Data Backup &amp; Sync</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">Export your data to use across browsers or as a backup. Import to restore.</p>
+        <div style="display:flex;gap:8px;margin-bottom:20px">
+          <button class="btn-primary" onclick="exportData()" style="flex:1">↓ Export JSON</button>
+          <button class="btn-outline" onclick="importData()" style="flex:1">↑ Import JSON</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+
+        <div class="settings-section-title" style="margin-top:4px">Cloud Sync — Supabase (optional)</div>
+        <p style="font-size:12px;color:var(--muted);margin:10px 0;line-height:1.6">
+          Free Postgres database — works across all browsers and devices.<br>
+          <a href="https://supabase.com" target="_blank" style="color:var(--blue)">Sign up at supabase.com</a> → New project → Settings → API
+        </p>
+        <label class="settings-label">Project URL</label>
+        <input type="text" class="settings-input" id="sb-url" placeholder="https://xxx.supabase.co">
+        <label class="settings-label">Anon/Public Key</label>
+        <input type="password" class="settings-input" id="sb-key" placeholder="eyJhbGci...">
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-primary" onclick="saveSupabaseSettings()" style="flex:1">Save & Sync</button>
+          <button class="btn-outline" onclick="loadFromSupabase()" style="flex:1">↓ Load from cloud</button>
         </div>
       </div>
 
       <!-- GMAIL -->
       <div class="settings-card">
         <div class="settings-section-title">Gmail Auto-Tracking</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7">Connect Gmail so HuntAI detects recruiter replies and auto-updates your tracker — no manual entry.</p>
-        <button class="btn-gmail" onclick="connectGmail()" id="gmail-connect-btn">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">Auto-detects recruiter replies and moves your tracker cards automatically.</p>
+        <button class="btn-gmail" onclick="connectGmail()">
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 0 4.94 12c0 .813.132 1.605.376 2.348"/><path fill="#4285F4" d="M12 4.941c1.687 0 3.208.599 4.4 1.589l3.28-3.28C17.728 1.693 15.041.627 12 .627c-4.27 0-7.965 2.452-9.745 6.038l3.745 2.908c.873-2.652 3.337-4.632 6-4.632z"/><path fill="#FBBC05" d="M4.94 9.938C4.677 10.65 4.528 11.41 4.528 12c0 .59.148 1.35.411 2.062l-3.745 2.908C.427 15.362 0 13.743 0 12c0-1.744.427-3.362 1.194-4.97L4.94 9.938z"/><path fill="#34A853" d="M12 23.373c3.041 0 5.728-1.066 7.68-2.877l-3.745-2.908c-1.053.707-2.382 1.122-3.935 1.122-2.663 0-5.127-1.98-6-4.632l-3.745 2.908C3.035 20.92 7.23 23.373 12 23.373z"/></svg>
           Connect Google Account
         </button>
-        <div class="gmail-info" id="gmail-info"></div>
+        <div class="gmail-info" id="gmail-info" style="margin-top:14px"></div>
       </div>
 
       <!-- SCHEDULE -->
       <div class="settings-card">
-        <div class="settings-section-title">Refresh Schedule</div>
-        <label class="settings-label">Auto-fetch interval</label>
+        <div class="settings-section-title">Auto-Refresh Schedule</div>
+        <label class="settings-label">Fetch interval</label>
         <select class="settings-input" id="interval-sel" onchange="saveInterval()">
           <option value="3600">Every hour</option>
           <option value="1800">Every 30 minutes</option>
@@ -255,7 +287,7 @@
       <label class="modal-label">Source</label>
       <select class="modal-input" id="log-source"><option>LinkedIn</option><option>Indeed</option><option>Glassdoor</option><option>Company website</option><option>Referral</option><option>Other</option></select>
       <label class="modal-label">Notes</label>
-      <textarea class="modal-input" id="log-notes" rows="3" placeholder="Recruiter name, salary range, notes..."></textarea>
+      <textarea class="modal-input" id="log-notes" rows="3" placeholder="Recruiter, salary range, notes..."></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn-outline" onclick="closeLogModal()">Cancel</button>
@@ -271,7 +303,10 @@
       <div>
         <h2 class="modal-title" id="dm-title"></h2>
         <div style="font-size:13px;color:var(--muted);margin-top:4px" id="dm-sub"></div>
-        <span id="dm-sponsor" class="sponsor-pill sponsor-unknown" style="margin-top:6px;display:inline-block"></span>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+          <span id="dm-sponsor" class="sponsor-pill sponsor-unknown"></span>
+          <a id="dm-open-link" href="#" target="_blank" rel="noopener" class="btn-link-card" style="display:none;font-size:12px">↗ Open job posting</a>
+        </div>
       </div>
       <button class="modal-close" onclick="closeDetailModal()">✕</button>
     </div>
@@ -280,17 +315,15 @@
         <div>
           <label class="modal-label">Status</label>
           <select class="modal-input" id="dm-status" onchange="updateAppStatus()">
-            <option value="saved">Saved</option>
-            <option value="applied">Applied</option>
-            <option value="interview">Interview</option>
-            <option value="offer">Offer</option>
+            <option value="saved">Saved</option><option value="applied">Applied</option>
+            <option value="interview">Interview</option><option value="offer">Offer</option>
             <option value="rejected">Rejected</option>
           </select>
           <label class="modal-label" style="margin-top:12px">Notes</label>
           <textarea class="modal-input" id="dm-notes" rows="4" placeholder="Interview notes, contacts, next steps..."></textarea>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="btn-primary" onclick="saveDetailNote()" style="flex:1">Save note</button>
-            <button class="btn-delete" onclick="deleteApplication(STATE.detailId)" title="Delete this application">Delete</button>
+            <button class="btn-delete" onclick="deleteApplication(STATE.detailId)">Delete</button>
           </div>
         </div>
         <div>
@@ -302,9 +335,7 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
-
 <script src="app.js"></script>
 </body>
 </html>
