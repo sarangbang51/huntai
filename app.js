@@ -5,12 +5,10 @@
         date filter, Supabase sync
    ═══════════════════════════════════════════════════ */
 
-// ── ACTORS (verified working on free Apify) ──────────
-// These are the exact actor IDs that work with curious_coder account
+// ── ACTORS ─────────────────────────────────────────────
 const ACTORS = {
-  linkedin: 'curious_coder/linkedin-jobs-scraper',
-  indeed:   'misceres/indeed-scraper',
-  google:   'bebity/linkedin-jobs-search-scraper', // fallback broad scraper
+  linkedin: 'curious_coder~linkedin-jobs-scraper',   // uses ~ not /
+  google:   'jupri~google-jobs-scraper',              // Google Jobs = company sites + everywhere
 };
 
 // ── SUGGESTIONS DATA ─────────────────────────────────
@@ -142,7 +140,7 @@ async function fetchJobs(manual = false) {
 
   document.getElementById('feed-loading').style.display = 'flex';
   document.getElementById('feed-empty').style.display = 'none';
-  setLoadingSub('Starting LinkedIn scrapers...');
+  setLoadingSub('Starting Google Jobs + LinkedIn scrapers...');
 
   const allJobs = [];
   let completed = 0;
@@ -160,21 +158,24 @@ async function fetchJobs(manual = false) {
     }
   }
 
-  // Run ALL in parallel
+  // Run ALL in parallel — Google Jobs primary, LinkedIn fallback
   await Promise.all(pairs.map(async ({ query, location, role }) => {
     try {
-      // Primary: LinkedIn scraper (verified working, correct input format)
-      const jobs = await runLinkedInScraper(key, query, location);
+      // 1st: Google Jobs (covers company sites, Greenhouse, Lever, Workday, Indeed etc)
+      let jobs = await runGoogleJobsScraper(key, query, location);
+
+      // 2nd: LinkedIn scraper as fallback/supplement
+      const linkedInJobs = await runLinkedInScraper(key, query, location);
+      if (linkedInJobs && linkedInJobs.length) {
+        jobs = [...(jobs || []), ...linkedInJobs];
+      }
+
       if (jobs && jobs.length) {
         jobs.forEach(j => allJobs.push(j));
-      } else {
-        // Fallback: bebity broad scraper
-        const fallback = await runBebityLinkedInScraper(key, query, location);
-        if (fallback) fallback.forEach(j => allJobs.push(j));
       }
+
       completed++;
       setLoadingSub(`${completed}/${pairs.length} searches done — ${allJobs.length} jobs found`);
-      // Stream results as they arrive
       if (allJobs.length > 0) { STATE.jobs = dedup(allJobs); renderFeed(); }
     } catch(e) { console.warn(`Failed: ${query} in ${location}`, e); }
   }));
@@ -190,25 +191,22 @@ async function fetchJobs(manual = false) {
   document.getElementById('feed-loading').style.display = 'none';
   document.getElementById('job-grid').style.display = 'grid';
 
-  if (allJobs.length > 0) toast(`✓ Fetched ${STATE.jobs.length} jobs`);
+  if (allJobs.length > 0) toast(`✓ Fetched ${STATE.jobs.length} jobs from Google Jobs + LinkedIn`);
   else if (manual) toast('No jobs returned — see Settings to verify your Apify key');
 }
 
-// ── LINKEDIN SCRAPER (curious_coder) — CORRECT INPUT ──
-// Verified input schema from Apify actor page
+// ── LINKEDIN SCRAPER ─────────────────────────────────
+// curious_coder actor requires urls[] array of LinkedIn search URLs
+// Error "input.urls is required" confirmed this format
 async function runLinkedInScraper(key, query, location) {
   try {
+    // Build LinkedIn job search URL — this is what the actor needs
+    const searchUrl = buildLinkedInSearchUrl(query, location);
     const body = {
-      queries: query,              // required: search query string
-      location: location,          // location string
-      maxItems: 25,                // max results
-      parseCompanyDetails: false,
+      urls: [{ url: searchUrl }],  // ← REQUIRED: array of LinkedIn URLs
+      maxItems: 25,
       saveOnlyUniqueItems: true,
-      followApplyRedirects: true,  // ← fixes redirect links
-      proxy: {
-        useApifyProxy: true,
-        apifyProxyGroups: ['RESIDENTIAL'],
-      },
+      proxy: { useApifyProxy: true },
     };
 
     const runRes = await fetch(
@@ -218,37 +216,67 @@ async function runLinkedInScraper(key, query, location) {
 
     if (!runRes.ok) {
       const err = await runRes.json().catch(() => ({}));
-      console.warn('LinkedIn scraper start failed:', runRes.status, err?.error?.message);
+      console.warn('LinkedIn scraper failed:', runRes.status, err?.error?.message);
       return null;
     }
 
     const { data } = await runRes.json();
     if (!data?.id) return null;
-
     const items = await pollAndFetch(key, data.id, data.defaultDatasetId);
     return items.map(r => normalizeLinkedInJob(r, query));
   } catch(e) { console.warn('LinkedIn scraper error:', e.message); return null; }
 }
 
-// ── BEBITY BROAD SCRAPER (fallback) ──────────────────
-async function runBebityLinkedInScraper(key, query, location) {
+// Build LinkedIn job search URL from role + location
+function buildLinkedInSearchUrl(query, location) {
+  const kw = encodeURIComponent(query);
+  const loc = encodeURIComponent(location);
+  // f_TPR=r86400 = posted in last 24h, f_WT=2 = remote
+  let url = `https://www.linkedin.com/jobs/search/?keywords=${kw}&location=${loc}&f_TPR=r86400&start=0`;
+  if (location.toLowerCase() === 'remote') url += '&f_WT=2';
+  return url;
+}
+
+// ── GOOGLE JOBS SCRAPER ───────────────────────────────
+// Covers company career pages, Greenhouse, Lever, Workday, Indeed, Glassdoor
+// = the "search everywhere including company websites" feature
+async function runGoogleJobsScraper(key, query, location) {
   try {
     const body = {
-      title: query,
-      location: location,
-      rows: 20,
+      query: `${query} ${location} jobs`,   // Google Jobs search string
+      maxResults: 20,
+      country: locationToCountryCode(location),
+      language: 'en',
+      proxy: { useApifyProxy: true },
     };
+
     const runRes = await fetch(
       `https://api.apify.com/v2/acts/${encodeURIComponent(ACTORS.google)}/runs`,
       { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify(body) }
     );
-    if (!runRes.ok) return null;
+
+    if (!runRes.ok) {
+      console.warn('Google Jobs scraper failed:', runRes.status);
+      return null;
+    }
+
     const { data } = await runRes.json();
     if (!data?.id) return null;
     const items = await pollAndFetch(key, data.id, data.defaultDatasetId);
-    return items.map(r => normalizeLinkedInJob(r, query));
-  } catch(e) { console.warn('Bebity fallback error:', e.message); return null; }
+    return items.map(r => normalizeLinkedInJob(r, query)); // same normalizer works
+  } catch(e) { console.warn('Google Jobs scraper error:', e.message); return null; }
 }
+
+function locationToCountryCode(location) {
+  const l = location.toLowerCase();
+  if (l.includes('india') || l.includes('bengaluru') || l.includes('mumbai') || l.includes('hyderabad')) return 'IN';
+  if (l.includes('uk') || l.includes('london') || l.includes('manchester')) return 'GB';
+  if (l.includes('canada') || l.includes('toronto') || l.includes('vancouver')) return 'CA';
+  if (l.includes('australia') || l.includes('sydney') || l.includes('melbourne')) return 'AU';
+  return 'US'; // default
+}
+
+// Bebity scraper removed — using Google Jobs + LinkedIn instead
 
 // ── POLL & FETCH DATASET ──────────────────────────────
 async function pollAndFetch(key, runId, datasetId, maxPolls = 45) {
