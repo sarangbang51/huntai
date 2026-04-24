@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HuntAI — Job Search Dashboard</title>
+<title>HuntAI V2 — Job Search Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -13,8 +13,8 @@
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-mark">H</div>
-    <div class="logo-text">Hunt<span>AI</span></div>
-    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀</button>
+    <div class="logo-text">Hunt<span>AI</span> <span class="v2-badge">V2</span></div>
+    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">☀</button>
   </div>
   <nav class="sidebar-nav">
     <button class="nav-item active" data-panel="feed" onclick="showPanel('feed',this)">
@@ -35,6 +35,10 @@
     </button>
   </nav>
   <div class="sidebar-footer">
+    <div class="cloud-indicator">
+      <div class="status-dot" id="cloud-dot"></div>
+      <span id="cloud-status">No database</span>
+    </div>
     <div class="sidebar-last-fetch" id="feed-updated-sidebar">Last fetch: —</div>
     <button class="btn-refresh-now" onclick="fetchJobs(true)">↻ Refresh now</button>
     <div class="gmail-status" onclick="showPanel('settings')">
@@ -51,11 +55,10 @@
     <div class="panel-header">
       <div>
         <h1 class="panel-title">Job Feed</h1>
-        <p class="panel-sub">Live from LinkedIn, Indeed, Greenhouse + company sites — <span id="feed-updated">loading...</span></p>
+        <p class="panel-sub">LinkedIn + Google Jobs (company sites, Greenhouse, Lever, Workday) — <span id="feed-updated">loading...</span></p>
       </div>
       <button class="btn-primary" onclick="fetchJobs(true)">↻ Fetch now</button>
     </div>
-
     <div class="filter-row" style="margin-bottom:10px;flex-wrap:wrap">
       <input type="text" class="search-input" id="search-q" placeholder="Search title, company, skill..." oninput="filterFeed()">
       <select class="filter-sel" id="f-role" onchange="filterFeed()">
@@ -68,7 +71,7 @@
         <option value="Remote">Remote</option>
         <option value="United States">United States</option>
         <option value="India">India</option>
-        <option value="UK">United Kingdom</option>
+        <option value="United Kingdom">United Kingdom</option>
       </select>
       <select class="filter-sel" id="f-date" onchange="filterFeed()">
         <option value="any">Any time</option>
@@ -81,7 +84,6 @@
         <option value="all">All (sponsorship)</option>
         <option value="yes">✦ Sponsors visas only</option>
         <option value="hide_no">Hide "no sponsorship"</option>
-        <option value="unknown">Unknown only</option>
       </select>
       <select class="filter-sel" id="f-sort" onchange="filterFeed()">
         <option value="recent">Newest first</option>
@@ -89,7 +91,6 @@
         <option value="match">Best match</option>
       </select>
     </div>
-
     <div class="source-pills">
       <span class="src-pill on" onclick="toggleSrc(this,'LinkedIn')">LinkedIn</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Indeed')">Indeed</span>
@@ -97,10 +98,9 @@
       <span class="src-pill on" onclick="toggleSrc(this,'Lever')">Lever</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Workday')">Workday</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Company Site')">Company Sites</span>
+      <span class="src-pill on" onclick="toggleSrc(this,'Google Jobs')">Google Jobs</span>
       <span class="src-pill on" onclick="toggleSrc(this,'Glassdoor')">Glassdoor</span>
-      <span class="src-pill on" onclick="toggleSrc(this,'Wellfound')">Wellfound</span>
     </div>
-
     <div id="feed-loading" class="loading-state" style="display:none">
       <div class="loader-ring"></div>
       <div class="loading-text">Fetching live jobs<span class="dots"></span></div>
@@ -110,14 +110,14 @@
     <div class="empty-state" id="feed-empty" style="display:none">
       <div class="empty-icon">◎</div>
       <div class="empty-title">No jobs match your filters</div>
-      <div class="empty-sub">Try adjusting the date or sponsorship filter</div>
+      <div class="empty-sub">Try adjusting search or filters</div>
     </div>
   </div>
 
   <!-- TRACKER -->
   <div class="panel" id="panel-tracker">
     <div class="panel-header">
-      <div><h1 class="panel-title">Tracker</h1><p class="panel-sub">Click any card to update status, add notes, or delete</p></div>
+      <div><h1 class="panel-title">Tracker</h1><p class="panel-sub">Synced to Supabase — available on any browser or device</p></div>
       <button class="btn-primary" onclick="showLogModal()">+ Log manually</button>
     </div>
     <div class="kanban">
@@ -139,7 +139,7 @@
       <div class="stat-card"><div class="stat-label">Offers</div><div class="stat-num green" id="st-offer">0</div><div class="stat-delta">you got this!</div></div>
     </div>
     <div class="stat-card" style="margin-bottom:16px;padding:14px 20px">
-      <div class="stat-label" style="margin-bottom:8px">Sponsorship breakdown</div>
+      <div class="stat-label" style="margin-bottom:6px">Sponsorship breakdown</div>
       <div id="st-sponsor" style="font-size:13px;display:flex;gap:16px;flex-wrap:wrap"></div>
     </div>
     <div class="charts-row">
@@ -152,7 +152,7 @@
 
   <!-- SETTINGS -->
   <div class="panel" id="panel-settings">
-    <div class="panel-header"><div><h1 class="panel-title">Settings</h1><p class="panel-sub">Profile, API keys, reminders, data backup</p></div></div>
+    <div class="panel-header"><div><h1 class="panel-title">Settings</h1><p class="panel-sub">Keys stay in your browser · Data syncs to Supabase</p></div></div>
     <div class="settings-grid">
 
       <!-- PROFILE -->
@@ -163,29 +163,75 @@
         <label class="settings-label">Your skills (for match scoring)</label>
         <div class="role-tags" id="profile-skill-tags" style="margin-bottom:8px;min-height:24px"></div>
         <div style="display:flex;gap:8px">
-          <input type="text" class="settings-input" id="p-skill-input" placeholder="e.g. SQL, Python..." style="flex:1">
+          <input type="text" class="settings-input" id="p-skill-input" placeholder="SQL, Python, Tableau..." style="flex:1">
           <button class="btn-outline" onclick="addProfileSkill()">Add</button>
         </div>
         <button class="btn-primary" onclick="saveProfile()" style="margin-top:14px;width:100%">Save Profile</button>
       </div>
 
+      <!-- RESUME -->
+      <div class="settings-card">
+        <div class="settings-section-title">Resume — AI Matching</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+          Upload your resume as a <strong>.txt</strong> file. Claude will use it to score every job and generate tailored cover letters and bullets.<br><br>
+          <strong style="color:var(--text)">To convert your PDF resume to .txt:</strong><br>
+          Open in Word/Google Docs → File → Download as .txt
+        </p>
+        <div id="resume-status" style="font-size:13px;color:var(--muted);margin-bottom:14px">No resume uploaded</div>
+        <input type="file" id="resume-file-input" accept=".txt,.md" style="display:none" onchange="handleResumeUpload(event)">
+        <button class="btn-primary" onclick="triggerResumeUpload()" style="width:100%">↑ Upload Resume (.txt)</button>
+      </div>
+
       <!-- APIFY -->
       <div class="settings-card">
         <div class="settings-section-title">Apify — Job Fetching</div>
-        <div style="font-size:12px;color:var(--green);background:var(--green-dim);border-radius:6px;padding:8px 12px;margin-bottom:12px;line-height:1.6">
-          🔒 Stored in your browser only — never in GitHub code
-        </div>
+        <div style="font-size:12px;color:var(--green);background:var(--green-dim);border-radius:6px;padding:8px 12px;margin-bottom:12px">🔒 Stored in browser only</div>
         <label class="settings-label">Apify API Token</label>
         <input type="password" class="settings-input" id="apify-key-input" placeholder="apify_api_...">
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="btn-primary" onclick="saveApifySettings()" style="flex:1">Save & Fetch Jobs</button>
-          <button class="btn-outline" onclick="revokeApifyKey()">Revoke</button>
+          <button class="btn-outline" onclick="STATE.settings.apifyKey='';saveLocal();document.getElementById('apify-key-input').value='';toast('Removed')">Revoke</button>
         </div>
         <div class="settings-feedback" id="apify-feedback"></div>
-        <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7">
-          Uses <strong>Google Jobs scraper</strong> (company sites, Greenhouse, Lever, Workday, Indeed, Glassdoor) + <strong>LinkedIn scraper</strong> as supplement.<br>
-          Fetches so far: <strong id="fetch-count">0</strong>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">Fetches so far: <strong id="fetch-count">0</strong></div>
+      </div>
+
+      <!-- ANTHROPIC AI -->
+      <div class="settings-card">
+        <div class="settings-section-title">Anthropic — AI Features</div>
+        <div style="font-size:12px;color:var(--green);background:var(--green-dim);border-radius:6px;padding:8px 12px;margin-bottom:12px">🔒 Stored in browser only</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          Powers AI resume matching, cover letter generation, and tailored bullet points.<br>
+          Get a free key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue)">console.anthropic.com</a> ($5 free credit)
+        </p>
+        <label class="settings-label">Anthropic API Key</label>
+        <input type="password" class="settings-input" id="anthropic-key-input" placeholder="sk-ant-...">
+        <button class="btn-primary" onclick="saveAnthropicKey()" style="margin-top:12px;width:100%">Save Key</button>
+        <div class="settings-feedback" id="anthropic-feedback"></div>
+      </div>
+
+      <!-- SUPABASE -->
+      <div class="settings-card">
+        <div class="settings-section-title">Supabase — Cloud Database</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.7">
+          Stores your applications, resume, and profile — works across all browsers and devices.<br><br>
+          <strong style="color:var(--text)">Setup (5 mins):</strong><br>
+          1. <a href="https://supabase.com" target="_blank" style="color:var(--blue)">supabase.com</a> → Sign up with GitHub<br>
+          2. New project → name it <code style="color:var(--accent)">huntai</code><br>
+          3. Go to <strong>SQL Editor</strong> → run this:<br>
+        </p>
+        <div class="sql-block">CREATE TABLE huntai_profile (id text PRIMARY KEY, years_exp text, skills text, ntfy_topic text, resume_text text, resume_filename text, updated_at timestamptz);
+CREATE TABLE huntai_applications (id text PRIMARY KEY, title text, company text, location text, source text, url text, status text, notes text, sponsorship text, applied_at timestamptz, activity text, gmail_detected bool, updated_at timestamptz);</div>
+        <p style="font-size:12px;color:var(--muted);margin:12px 0">4. Settings → API → copy URL and anon key below</p>
+        <label class="settings-label">Project URL</label>
+        <input type="text" class="settings-input" id="sb-url" placeholder="https://xxx.supabase.co">
+        <label class="settings-label">Anon/Public Key</label>
+        <input type="password" class="settings-input" id="sb-key" placeholder="eyJhbGci...">
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn-primary" onclick="saveSupabaseSettings()" style="flex:1">Connect & Sync</button>
+          <button class="btn-outline" onclick="loadFromCloud().then(()=>{renderKanban();renderFeed();toast('Loaded from cloud')})">↓ Load</button>
         </div>
+        <div class="settings-feedback" id="sb-feedback"></div>
       </div>
 
       <!-- ROLES -->
@@ -208,72 +254,72 @@
         <button class="btn-outline" onclick="addLoc()" style="margin-top:8px;width:100%">+ Add location</button>
       </div>
 
-      <!-- NTFY REMINDERS -->
+      <!-- NTFY -->
       <div class="settings-card">
         <div class="settings-section-title">Phone Reminders — ntfy.sh</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">
-          Get a phone notification 24h after saving a job if you haven't applied yet.<br><br>
-          <strong style="color:var(--text)">Setup (2 min, free):</strong><br>
+          Get notified on your phone 24h after saving a job if you haven't applied.<br><br>
           1. Install <a href="https://ntfy.sh" target="_blank" style="color:var(--blue)">ntfy app</a> on your phone<br>
-          2. Subscribe to any topic name you create (e.g. <code style="color:var(--accent)">sarang-huntai-2024</code>)<br>
-          3. Paste that topic name below
+          2. Subscribe to any topic name you create<br>
+          3. Paste that topic below
         </p>
-        <label class="settings-label">Your ntfy topic name</label>
-        <input type="text" class="settings-input" id="ntfy-topic" placeholder="e.g. sarang-huntai-2024">
-        <button class="btn-primary" onclick="testNtfy()" style="margin-top:10px;width:100%">Save & Send Test Notification</button>
-      </div>
-
-      <!-- DATA BACKUP -->
-      <div class="settings-card">
-        <div class="settings-section-title">Data Backup &amp; Sync</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">Export your data to use across browsers or as a backup. Import to restore.</p>
-        <div style="display:flex;gap:8px;margin-bottom:20px">
-          <button class="btn-primary" onclick="exportData()" style="flex:1">↓ Export JSON</button>
-          <button class="btn-outline" onclick="importData()" style="flex:1">↑ Import JSON</button>
-        </div>
-        <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
-
-        <div class="settings-section-title" style="margin-top:4px">Cloud Sync — Supabase (optional)</div>
-        <p style="font-size:12px;color:var(--muted);margin:10px 0;line-height:1.6">
-          Free Postgres database — works across all browsers and devices.<br>
-          <a href="https://supabase.com" target="_blank" style="color:var(--blue)">Sign up at supabase.com</a> → New project → Settings → API
-        </p>
-        <label class="settings-label">Project URL</label>
-        <input type="text" class="settings-input" id="sb-url" placeholder="https://xxx.supabase.co">
-        <label class="settings-label">Anon/Public Key</label>
-        <input type="password" class="settings-input" id="sb-key" placeholder="eyJhbGci...">
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn-primary" onclick="saveSupabaseSettings()" style="flex:1">Save & Sync</button>
-          <button class="btn-outline" onclick="loadFromSupabase()" style="flex:1">↓ Load from cloud</button>
-        </div>
+        <label class="settings-label">ntfy topic name</label>
+        <input type="text" class="settings-input" id="ntfy-topic" placeholder="e.g. sarang-huntai-jobs">
+        <button class="btn-primary" onclick="testNtfy()" style="margin-top:10px;width:100%">Save & Test Notification</button>
       </div>
 
       <!-- GMAIL -->
       <div class="settings-card">
         <div class="settings-section-title">Gmail Auto-Tracking</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">Auto-detects recruiter replies and moves your tracker cards automatically.</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7">Auto-detects recruiter replies and updates your tracker cards automatically.</p>
         <button class="btn-gmail" onclick="connectGmail()">
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 0 4.94 12c0 .813.132 1.605.376 2.348"/><path fill="#4285F4" d="M12 4.941c1.687 0 3.208.599 4.4 1.589l3.28-3.28C17.728 1.693 15.041.627 12 .627c-4.27 0-7.965 2.452-9.745 6.038l3.745 2.908c.873-2.652 3.337-4.632 6-4.632z"/><path fill="#FBBC05" d="M4.94 9.938C4.677 10.65 4.528 11.41 4.528 12c0 .59.148 1.35.411 2.062l-3.745 2.908C.427 15.362 0 13.743 0 12c0-1.744.427-3.362 1.194-4.97L4.94 9.938z"/><path fill="#34A853" d="M12 23.373c3.041 0 5.728-1.066 7.68-2.877l-3.745-2.908c-1.053.707-2.382 1.122-3.935 1.122-2.663 0-5.127-1.98-6-4.632l-3.745 2.908C3.035 20.92 7.23 23.373 12 23.373z"/></svg>
           Connect Google Account
         </button>
-        <div class="gmail-info" id="gmail-info" style="margin-top:14px"></div>
+        <div class="gmail-info" id="gmail-info" style="margin-top:14px;font-size:12px;color:var(--muted)"></div>
       </div>
 
-      <!-- SCHEDULE -->
+      <!-- SCHEDULE + BACKUP -->
       <div class="settings-card">
-        <div class="settings-section-title">Auto-Refresh Schedule</div>
-        <label class="settings-label">Fetch interval</label>
+        <div class="settings-section-title">Schedule &amp; Backup</div>
+        <label class="settings-label">Auto-fetch interval</label>
         <select class="settings-input" id="interval-sel" onchange="saveInterval()">
           <option value="3600">Every hour</option>
           <option value="1800">Every 30 minutes</option>
           <option value="7200">Every 2 hours</option>
         </select>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn-primary" onclick="exportData()" style="flex:1">↓ Export JSON</button>
+          <button class="btn-outline" onclick="importData()" style="flex:1">↑ Import JSON</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
       </div>
 
     </div>
   </div>
 
 </main>
+
+<!-- AI PANEL (slide-in from right) -->
+<div class="ai-panel-overlay" id="ai-panel" style="display:none" onclick="if(event.target===this)closeAIPanel()">
+  <div class="ai-panel">
+    <div class="ai-panel-header">
+      <div>
+        <div class="ai-panel-title">✦ AI Analysis</div>
+        <div class="ai-job-title" id="ai-job-title"></div>
+      </div>
+      <button class="modal-close" onclick="closeAIPanel()">✕</button>
+    </div>
+    <div class="ai-panel-body">
+      <div class="ai-section-title">Resume Match</div>
+      <div id="ai-match-section" class="ai-match-section"></div>
+      <div class="ai-section-title" style="margin-top:20px">Cover Letter</div>
+      <div id="ai-cover-section"></div>
+      <div class="ai-section-title" style="margin-top:20px">Tailored Resume Bullets</div>
+      <div id="ai-bullets-section"></div>
+    </div>
+  </div>
+</div>
 
 <!-- LOG MODAL -->
 <div class="modal-overlay" id="log-modal" style="display:none" onclick="closeLogModal(event)">
@@ -291,7 +337,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-outline" onclick="closeLogModal()">Cancel</button>
-      <button class="btn-primary" onclick="logApplication()">Save Application</button>
+      <button class="btn-primary" onclick="logApplication()">Save</button>
     </div>
   </div>
 </div>
@@ -305,7 +351,7 @@
         <div style="font-size:13px;color:var(--muted);margin-top:4px" id="dm-sub"></div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
           <span id="dm-sponsor" class="sponsor-pill sponsor-unknown"></span>
-          <a id="dm-open-link" href="#" target="_blank" rel="noopener" class="btn-link-card" style="display:none;font-size:12px">↗ Open job posting</a>
+          <a id="dm-open-link" href="#" target="_blank" rel="noopener" class="btn-link-card" style="display:none;font-size:12px">↗ Open job</a>
         </div>
       </div>
       <button class="modal-close" onclick="closeDetailModal()">✕</button>
