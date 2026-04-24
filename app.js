@@ -145,10 +145,11 @@ async function fetchJobs(manual = false) {
   const allJobs = [];
   let completed = 0;
 
-  // Build search pairs
+  // Build search pairs — one run per location with all roles batched
+  // This saves Apify credits vs 15 separate runs
   const pairs = [];
-  for (const role of STATE.settings.roles) {
-    for (const loc of STATE.settings.locations) {
+  for (const loc of STATE.settings.locations) {
+    for (const role of STATE.settings.roles) {
       let q = role;
       if (STATE.profile.yearsExp) {
         const y = parseInt(STATE.profile.yearsExp);
@@ -158,25 +159,17 @@ async function fetchJobs(manual = false) {
     }
   }
 
-  // Run ALL in parallel — Google Jobs primary, LinkedIn fallback
+  // Run ALL in parallel — LinkedIn scraper (confirmed working on your account)
   await Promise.all(pairs.map(async ({ query, location, role }) => {
     try {
-      // 1st: Google Jobs (covers company sites, Greenhouse, Lever, Workday, Indeed etc)
-      let jobs = await runGoogleJobsScraper(key, query, location);
-
-      // 2nd: LinkedIn scraper as fallback/supplement
-      const linkedInJobs = await runLinkedInScraper(key, query, location);
-      if (linkedInJobs && linkedInJobs.length) {
-        jobs = [...(jobs || []), ...linkedInJobs];
-      }
-
+      const jobs = await runLinkedInScraper(key, query, location);
       if (jobs && jobs.length) {
         jobs.forEach(j => allJobs.push(j));
+        setLoadingSub(`${completed+1}/${pairs.length} done — ${allJobs.length} jobs found`);
+        STATE.jobs = dedup(allJobs);
+        renderFeed();
       }
-
       completed++;
-      setLoadingSub(`${completed}/${pairs.length} searches done — ${allJobs.length} jobs found`);
-      if (allJobs.length > 0) { STATE.jobs = dedup(allJobs); renderFeed(); }
     } catch(e) { console.warn(`Failed: ${query} in ${location}`, e); }
   }));
 
