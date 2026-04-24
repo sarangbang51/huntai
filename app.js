@@ -196,43 +196,40 @@ async function fetchJobs(manual = false) {
 }
 
 // ── LINKEDIN SCRAPER ─────────────────────────────────
-// curious_coder actor requires urls[] array of LinkedIn search URLs
-// Error "input.urls is required" confirmed this format
+// EXACT schema from actor JSON: urls (string[]), count, scrapeCompany, splitByLocation
 async function runLinkedInScraper(key, query, location) {
   try {
-    // Build LinkedIn job search URL — this is what the actor needs
     const searchUrl = buildLinkedInSearchUrl(query, location);
     const body = {
-      urls: [{ url: searchUrl }],  // ← REQUIRED: array of LinkedIn URLs
-      maxItems: 25,
-      saveOnlyUniqueItems: true,
-      proxy: { useApifyProxy: true },
+      urls: [searchUrl],       // plain string in array — confirmed from actor JSON
+      count: 25,               // "count" not "maxItems"
+      scrapeCompany: false,
+      splitByLocation: false,
     };
-
+    console.log('LinkedIn body:', JSON.stringify(body));
     const runRes = await fetch(
-      `https://api.apify.com/v2/acts/${encodeURIComponent(ACTORS.linkedin)}/runs`,
+      'https://api.apify.com/v2/acts/curious_coder~linkedin-jobs-scraper/runs',
       { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify(body) }
     );
-
     if (!runRes.ok) {
       const err = await runRes.json().catch(() => ({}));
       console.warn('LinkedIn scraper failed:', runRes.status, err?.error?.message);
       return null;
     }
-
     const { data } = await runRes.json();
     if (!data?.id) return null;
+    console.log('LinkedIn run started:', data.id);
     const items = await pollAndFetch(key, data.id, data.defaultDatasetId);
+    console.log('LinkedIn items:', items.length);
     return items.map(r => normalizeLinkedInJob(r, query));
   } catch(e) { console.warn('LinkedIn scraper error:', e.message); return null; }
 }
 
-// Build LinkedIn job search URL from role + location
+// Build LinkedIn search URL — same format as actor default input
 function buildLinkedInSearchUrl(query, location) {
   const kw = encodeURIComponent(query);
   const loc = encodeURIComponent(location);
-  // f_TPR=r86400 = posted in last 24h, f_WT=2 = remote
-  let url = `https://www.linkedin.com/jobs/search/?keywords=${kw}&location=${loc}&f_TPR=r86400&start=0`;
+  let url = `https://www.linkedin.com/jobs/search/?keywords=${kw}&location=${loc}&f_TPR=r86400&position=1&pageNum=0`;
   if (location.toLowerCase() === 'remote') url += '&f_WT=2';
   return url;
 }
